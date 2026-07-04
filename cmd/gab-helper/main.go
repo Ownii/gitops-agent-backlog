@@ -66,6 +66,21 @@ func dispatch(args []string, stdout, stderr io.Writer) int {
 			return 1
 		}
 		return 0
+	case "next":
+		id, blocked, err := command.Next(".")
+		if err != nil {
+			fmt.Fprintln(stderr, "error:", err)
+			return 1
+		}
+		if id == "" {
+			fmt.Fprintln(stderr, "no ready ticket")
+			for _, b := range blocked {
+				fmt.Fprintln(stderr, "  -", b)
+			}
+			return 3
+		}
+		fmt.Fprintln(stdout, id)
+		return 0
 	default:
 		fmt.Fprintf(stderr, "unknown command %q\n\n%s", args[0], usage)
 		return 2
