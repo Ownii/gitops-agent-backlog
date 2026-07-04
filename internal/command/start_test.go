@@ -26,8 +26,12 @@ func seedPlanned(t *testing.T, dir, id, slug string) string {
 	ticket.WriteMeta(filepath.Join(tdir, "meta.yml"), &ticket.Meta{ID: id, Title: slug, Status: ticket.StatusPlanned})
 	os.WriteFile(filepath.Join(tdir, "spec.md"), []byte("## Spec\nlogin\n"), 0o644)
 	os.WriteFile(filepath.Join(tdir, "plan.md"), []byte("## Plan\nstep 1\n"), 0o644)
-	gitx.Run(dir, "add", "-A")
-	gitx.Run(dir, "commit", "-m", "seed "+id)
+	if _, err := gitx.Run(dir, "add", "-A"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := gitx.Run(dir, "commit", "-m", "seed "+id); err != nil {
+		t.Fatal(err)
+	}
 	return tdir
 }
 
@@ -58,6 +62,21 @@ func TestStartCreatesWorktreeBriefAndStatus(t *testing.T) {
 	if _, err := gitx.Run(wt, "rev-parse", "gab/T1-login"); err != nil {
 		t.Fatalf("branch not found: %v", err)
 	}
+
+	// Assert the core invariant: brief commit touches ONLY .gab/BRIEF.md (not .gab/tickets/*)
+	changedFiles, err := gitx.Run(wt, "show", "--stat", "--name-only", "--pretty=format:", "HEAD")
+	if err != nil {
+		t.Fatalf("failed to get changed files: %v", err)
+	}
+	changedFilesList := strings.Fields(string(changedFiles))
+	if len(changedFilesList) != 1 || changedFilesList[0] != ".gab/BRIEF.md" {
+		t.Fatalf("brief commit should touch only .gab/BRIEF.md, got: %v", changedFilesList)
+	}
+
+	// Assert BRIEF.md does NOT contain a status: line (it is statusless)
+	if strings.Contains(string(brief), "status:") {
+		t.Fatalf("BRIEF.md should not contain status: line, got: %s", brief)
+	}
 }
 
 func TestStartRejectsNonPlanned(t *testing.T) {
@@ -69,5 +88,29 @@ func TestStartRejectsNonPlanned(t *testing.T) {
 	ticket.WriteMeta(filepath.Join(tdir, "meta.yml"), &ticket.Meta{ID: "T1", Status: ticket.StatusTodo})
 	if err := Start(dir, "T1"); err == nil {
 		t.Fatal("expected error starting a non-planned ticket")
+	}
+}
+
+func TestStartRejectsExistingWorktree(t *testing.T) {
+	dir := testutil.InitRepo(t)
+	tdir := seedPlanned(t, dir, "T1", "login")
+
+	// First call should succeed
+	if err := Start(dir, "T1"); err != nil {
+		t.Fatal(err)
+	}
+
+	// Reset status back to planned for second call
+	ticket.WriteMeta(filepath.Join(tdir, "meta.yml"), &ticket.Meta{ID: "T1", Status: ticket.StatusPlanned, Title: "login"})
+	if _, err := gitx.Run(dir, "add", filepath.Join(tdir, "meta.yml")); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := gitx.Run(dir, "commit", "-m", "reset T1 to planned"); err != nil {
+		t.Fatal(err)
+	}
+
+	// Second call should fail because worktree/branch already exists
+	if err := Start(dir, "T1"); err == nil {
+		t.Fatal("expected error starting when worktree/branch already exists")
 	}
 }
