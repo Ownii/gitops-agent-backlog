@@ -178,7 +178,46 @@ inhaltlich schreiben, Acceptance abhaken, `definition-of-done.md` interpretieren
 Status-Flips während man auf `main` ist (z.B. `/gab:plan` → `planned` per Datei-Edit —
 kein Cross-Tree-Risiko, daher kein Helper nötig).
 
-## 9. Portabilität: ein Kern, viele Adapter
+## 9. Skills & Inspirationen (Reasoning vs. Tooling)
+
+`gab` ist self-contained: es bringt seine eigenen Skills mit und benötigt **keine externe
+Abhängigkeit** (kein superpowers-Install). Wir schreiben die Skills eigenständig neu und
+lassen uns nur von bewährten Mustern *inspirieren* — Muster/Ideen sind nicht
+lizenzpflichtig (MIT/Copyright schützt den konkreten Text, nicht das Konzept). Credit an
+superpowers (© 2025 Jesse Vincent, MIT) als Inspiration ist gute Praxis, aber keine Pflicht.
+
+Jeder Command trennt sauber: **deterministisches Tooling (`gab-helper`)** vs.
+**AI-Reasoning (eigene Skill-Prosa, inspiriert von etablierten Mustern)**.
+
+| Command | Deterministisch (`gab-helper`) | AI-Reasoning (inspiriert von) |
+| :--- | :--- | :--- |
+| `/gab:new` (Refine) | ID/Rank vergeben, Ordner scaffolden | brainstorming → `spec.md` + Acceptance Criteria |
+| `/gab:plan` | — (Status-Flip auf main per Datei-Edit) | writing-plans → `plan.md`, kennt `.gab`-Pfade & DoD |
+| `/gab:start` | Worktree + Branch, Brief committen, `status=in-progress` | TDD + subagent-driven + systematic-debugging; Brief lesen, `summary.md` mitschreiben |
+| `/gab:complete` | `summary.md` → main, `status=to-verify`, push | verification-before-completion + interner Review |
+| `/gab:done` | Squash-Merge, → `done/`, Worktree/Branch entfernen | finishing-a-development-branch; offene Punkte behandeln |
+
+**Vier Muster, die `gab`s Lücken füllen:**
+1. **verification-before-completion → das DoD-Gate.** Der Agent liefert *Evidenz* (echter
+   Befehls-Output), bevor er auf `to-verify` schaltet — nicht Selbsteinschätzung. Fest in
+   `/gab:complete` verdrahtet.
+2. **Interner Review-Agent im Worktree vor `to-verify`** (inspiriert von
+   requesting-code-review): prüft gegen Spec + Acceptance + DoD und lässt fixen, bevor die
+   menschliche QA drankommt.
+3. **systematic-debugging** im TDD-Loop von `/gab:start`: bei roten Tests diszipliniert
+   debuggen statt rumprobieren.
+4. **finishing-a-development-branch** in `/gab:done`: Disziplin um Merge/Cleanup und der
+   Ort, um übrig gebliebene offene Punkte aus `summary.md` bewusst zu behandeln.
+
+**Worktree-Disziplin → Automatik:** superpowers hat `using-git-worktrees` als *manuelle*
+Disziplin. `gab` befördert das in Tooling — `gab-helper` legt Worktrees deterministisch an,
+der Agent muss nicht daran denken (und kann es damit nicht verkacken).
+
+**`gab`s eigene Erfindung (nicht aus superpowers):** das **`summary.md`-Zurückschreiben in
+die Wahrheit** — Learnings/Abweichungen fließen zurück zur Source of Truth. Das ist `gab`s
+Alleinstellungsmerkmal.
+
+## 10. Portabilität: ein Kern, viele Adapter
 
 Vorbild ist die Struktur von `superpowers`: eine agent-neutrale Wissens-/Logikbasis plus
 dünne Adapter pro Agent (je ein kleines Manifest, das auf denselben Kern zeigt).
@@ -197,7 +236,7 @@ dünne Adapter pro Agent (je ein kleines Manifest, das auf denselben Kern zeigt)
   / `gab_start` werden native Tools in jedem MCP-fähigen Agenten. MCP liefert nur Tools,
   nicht die Denk-Prosa — die Markdown-Basis bleibt nötig.
 
-## 10. Plugin-Struktur (Claude-Code-Adapter, MVP)
+## 11. Plugin-Struktur (Claude-Code-Adapter, MVP)
 
 ```text
 gab/
@@ -220,7 +259,7 @@ gab/
 `gab-helper` = harter State. Diese Trennung ist zugleich die Portabilitäts-Naht: der Helper
 ist der universelle Kern, die Skills sind die austauschbare Prosa.
 
-## 11. MVP-Scope
+## 12. MVP-Scope
 
 **Im MVP:**
 - Commands: `new`, `plan`, `next`, `start`, `complete`, `done`.
@@ -235,7 +274,7 @@ ist der universelle Kern, die Skills sind die austauschbare Prosa.
 - Weitere Agent-Adapter (Cursor/Codex/Gemini) und MCP-Server.
 - Plattform-Export (GitHub/Jira). Alles Team/SaaS ist ausgeschlossen.
 
-## 12. Edge Cases (MVP muss sie sauber behandeln)
+## 13. Edge Cases (MVP muss sie sauber behandeln)
 
 - **`/gab:next` findet nichts** (nichts `planned` oder alles durch Deps blockiert):
   klare Meldung, welche Tickets warum blockiert sind.
@@ -244,7 +283,7 @@ ist der universelle Kern, die Skills sind die austauschbare Prosa.
 - **Paralleles Arbeiten:** fällt strukturell heraus (jedes `/gab:start` = eigener
   Worktree); mehrere `in-progress` gleichzeitig sind erlaubt, kein Sonderfall.
 
-## 13. Offene Implementierungs-Entscheidungen (nicht blockierend)
+## 14. Offene Implementierungs-Entscheidungen (nicht blockierend)
 
 - **Sprache von `gab-helper`: Go** (entschieden). Ein statisches Binary, null
   Runtime-Dependency (kein Interpreter/`yq` nötig), schneller Cold-Start, triviale
