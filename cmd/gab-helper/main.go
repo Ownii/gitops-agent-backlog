@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io"
 	"os"
+
+	"github.com/Ownii/gitops-agent-backlog/internal/command"
 )
 
 const usage = `usage: gab-helper <command> [args]
@@ -22,7 +24,18 @@ func dispatch(args []string, stdout, stderr io.Writer) int {
 		return 2
 	}
 	switch args[0] {
-	// command cases are wired up in later tasks
+	case "new":
+		if len(args) != 2 {
+			fmt.Fprintln(stderr, "usage: gab-helper new <slug>")
+			return 2
+		}
+		dir, err := command.New(".", args[1])
+		if err != nil {
+			fmt.Fprintln(stderr, "error:", err)
+			return 1
+		}
+		fmt.Fprintln(stdout, dir)
+		return 0
 	default:
 		fmt.Fprintf(stderr, "unknown command %q\n\n%s", args[0], usage)
 		return 2
