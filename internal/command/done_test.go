@@ -1,0 +1,54 @@
+package command
+
+import (
+	"os"
+	"path/filepath"
+	"testing"
+
+	"github.com/Ownii/gitops-agent-backlog/internal/gitx"
+	"github.com/Ownii/gitops-agent-backlog/internal/repo"
+	"github.com/Ownii/gitops-agent-backlog/internal/ticket"
+	"github.com/Ownii/gitops-agent-backlog/internal/testutil"
+)
+
+func TestDoneMergesArchivesAndCleansUp(t *testing.T) {
+	dir := testutil.InitRepo(t)
+	seedPlanned(t, dir, "T1", "login")
+	Start(dir, "T1")
+	r, _ := repo.Discover(dir)
+	wt := r.WorktreePath("T1", "login")
+	os.WriteFile(filepath.Join(wt, "app.txt"), []byte("feature\n"), 0o644)
+	os.MkdirAll(filepath.Join(wt, ".gab"), 0o755)
+	os.WriteFile(filepath.Join(wt, ".gab", "SUMMARY.md"), []byte("ok\n"), 0o644)
+	gitx.Run(wt, "add", "-A")
+	gitx.Run(wt, "commit", "-m", "impl")
+	Complete(wt, "T1")
+
+	if err := Done(dir, "T1"); err != nil {
+		t.Fatal(err)
+	}
+
+	// code merged into main
+	if _, err := os.Stat(filepath.Join(dir, "app.txt")); err != nil {
+		t.Fatalf("feature file not merged: %v", err)
+	}
+	// ticket archived, not active
+	if _, _, err := TicketDirByID(r, "T1"); err == nil {
+		t.Fatal("ticket should no longer be active")
+	}
+	if _, err := os.Stat(filepath.Join(r.DoneDir(), "010-T1-login")); err != nil {
+		t.Fatalf("ticket not archived to done/: %v", err)
+	}
+	// main's .gab was not polluted by the branch's BRIEF.md
+	if _, err := os.Stat(filepath.Join(dir, ".gab", "BRIEF.md")); !os.IsNotExist(err) {
+		t.Fatalf("BRIEF.md leaked into main .gab")
+	}
+	// worktree + branch removed
+	if _, err := os.Stat(wt); !os.IsNotExist(err) {
+		t.Fatalf("worktree not removed")
+	}
+	if _, err := gitx.Run(dir, "rev-parse", "--verify", "gab/T1-login"); err == nil {
+		t.Fatal("branch should be deleted")
+	}
+	_ = ticket.StatusToVerify // keep ticket import used
+}
