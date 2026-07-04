@@ -4,7 +4,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/Ownii/gitops-agent-backlog/internal/repo"
 	"github.com/Ownii/gitops-agent-backlog/internal/ticket"
 	"github.com/Ownii/gitops-agent-backlog/internal/testutil"
 )
@@ -37,5 +36,4 @@ func TestNextBlockedByDependency(t *testing.T) {
 	if id != "" || len(blocked) == 0 {
 		t.Fatalf("expected blocked, got id=%q blocked=%v", id, blocked)
 	}
-	_ = repo.Repo{} // keep repo import used
 }

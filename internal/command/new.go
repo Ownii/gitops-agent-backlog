@@ -1,6 +1,7 @@
 package command
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -20,6 +21,9 @@ const specTemplate = `## Spec
 
 // New scaffolds a new ticket folder and returns its path. It does not commit.
 func New(cwd, slug string) (string, error) {
+	if !ticket.ValidSlug(slug) {
+		return "", fmt.Errorf("invalid slug %q: must be lowercase kebab-case ([a-z0-9] words joined by -)", slug)
+	}
 	r, err := repo.Discover(cwd)
 	if err != nil {
 		return "", err

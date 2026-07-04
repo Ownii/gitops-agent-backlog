@@ -41,15 +41,18 @@ func Done(cwd, id string) error {
 	if _, err := gitx.Run(r.Main, "checkout", "--", ".gab"); err != nil {
 		return err
 	}
-	// Remove any untracked .gab files that were newly added by the branch.
-	if _, err := gitx.Run(r.Main, "clean", "-fd", "--", ".gab"); err != nil {
-		return fmt.Errorf("clean .gab: %w", err)
+	// Remove only the known branch-side .gab residue files (not the whole
+	// .gab tree — an uncommitted freshly-`new`ed ticket may live there).
+	for _, f := range []string{"BRIEF.md", "SUMMARY.md"} {
+		if err := os.Remove(filepath.Join(r.GabDir(), f)); err != nil && !os.IsNotExist(err) {
+			return fmt.Errorf("remove .gab residue %s: %w", f, err)
+		}
 	}
 	if _, err := gitx.Run(r.Main, "commit", "-m", fmt.Sprintf("feat: %s (%s)", m.Title, id)); err != nil {
 		return err
 	}
 
-	// Recreate the done/ directory (git clean removes untracked empty dirs).
+	// Recreate the done/ directory (harmless safety before the mv below).
 	if err := os.MkdirAll(r.DoneDir(), 0o755); err != nil {
 		return fmt.Errorf("ensure done dir: %w", err)
 	}

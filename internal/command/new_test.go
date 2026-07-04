@@ -46,3 +46,20 @@ func TestNewIncrementsIDAndRank(t *testing.T) {
 		t.Fatalf("second folder = %q", got)
 	}
 }
+
+func TestNewRejectsInvalidSlug(t *testing.T) {
+	dir := testutil.InitRepo(t)
+	if _, err := New(dir, "My Feature"); err == nil {
+		t.Fatal("expected error for invalid slug \"My Feature\"")
+	}
+	if _, err := New(dir, "Bad_Slug"); err == nil {
+		t.Fatal("expected error for invalid slug \"Bad_Slug\"")
+	}
+	entries, err := os.ReadDir(filepath.Join(dir, ".gab", "tickets"))
+	if err != nil && !os.IsNotExist(err) {
+		t.Fatal(err)
+	}
+	if len(entries) != 0 {
+		t.Fatalf("expected no ticket folders created, got %v", entries)
+	}
+}

@@ -61,5 +61,34 @@ func TestDoneMergesArchivesAndCleansUp(t *testing.T) {
 	if _, err := gitx.Run(dir, "rev-parse", "--verify", "gab/T1-login"); err == nil {
 		t.Fatal("branch should be deleted")
 	}
-	_ = ticket.StatusToVerify // keep ticket import used
+}
+
+// TestDoneKeepsUncommittedTicket ensures Done's narrowed .gab residue removal
+// does not sweep an uncommitted freshly-`new`ed ticket folder off main.
+func TestDoneKeepsUncommittedTicket(t *testing.T) {
+	dir := testutil.InitRepo(t)
+	seedPlanned(t, dir, "T1", "login")
+	Start(dir, "T1")
+	r, _ := repo.Discover(dir)
+	wt := r.WorktreePath("T1", "login")
+	os.WriteFile(filepath.Join(wt, "app.txt"), []byte("feature\n"), 0o644)
+	os.MkdirAll(filepath.Join(wt, ".gab"), 0o755)
+	os.WriteFile(filepath.Join(wt, ".gab", "SUMMARY.md"), []byte("ok\n"), 0o644)
+	gitx.Run(wt, "add", "-A")
+	gitx.Run(wt, "commit", "-m", "impl")
+	Complete(wt, "T1")
+
+	// A second ticket, created but never committed (New does not commit).
+	otherDir, err := New(dir, "other")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := Done(dir, "T1"); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := os.Stat(otherDir); err != nil {
+		t.Fatalf("uncommitted ticket folder was swept by done: %v", err)
+	}
 }

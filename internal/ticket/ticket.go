@@ -28,7 +28,7 @@ type Meta struct {
 func ReadMeta(path string) (*Meta, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("read %s: %w", path, err)
 	}
 	var m Meta
 	if err := yaml.Unmarshal(data, &m); err != nil {
@@ -40,9 +40,12 @@ func ReadMeta(path string) (*Meta, error) {
 func WriteMeta(path string, m *Meta) error {
 	data, err := yaml.Marshal(m)
 	if err != nil {
-		return err
+		return fmt.Errorf("write %s: %w", path, err)
 	}
-	return os.WriteFile(path, data, 0o644)
+	if err := os.WriteFile(path, data, 0o644); err != nil {
+		return fmt.Errorf("write %s: %w", path, err)
+	}
+	return nil
 }
 
 type Folder struct {
@@ -53,6 +56,13 @@ type Folder struct {
 }
 
 var folderRe = regexp.MustCompile(`^(\d{3})-(T\d+)-([a-z0-9]+(?:-[a-z0-9]+)*)$`)
+
+var slugRe = regexp.MustCompile(`^[a-z0-9]+(?:-[a-z0-9]+)*$`)
+
+// ValidSlug reports whether s is lowercase kebab-case ([a-z0-9] words joined by -).
+func ValidSlug(s string) bool {
+	return slugRe.MatchString(s)
+}
 
 func ParseFolder(name string) (Folder, error) {
 	m := folderRe.FindStringSubmatch(name)
