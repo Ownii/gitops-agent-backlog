@@ -46,6 +46,16 @@ func dispatch(args []string, stdout, stderr io.Writer) int {
 			return 1
 		}
 		return 0
+	case "complete":
+		if len(args) != 2 {
+			fmt.Fprintln(stderr, "usage: gab-helper complete <id>")
+			return 2
+		}
+		if err := command.Complete(".", args[1]); err != nil {
+			fmt.Fprintln(stderr, "error:", err)
+			return 1
+		}
+		return 0
 	default:
 		fmt.Fprintf(stderr, "unknown command %q\n\n%s", args[0], usage)
 		return 2
