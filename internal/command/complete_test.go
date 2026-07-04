@@ -53,3 +53,46 @@ func TestCompleteRejectsDirtyWorktree(t *testing.T) {
 		t.Fatal("expected error for dirty worktree")
 	}
 }
+
+func TestCompleteWithoutSummaryStillSetsToVerify(t *testing.T) {
+	dir := testutil.InitRepo(t)
+	seedPlanned(t, dir, "T1", "login")
+	if err := Start(dir, "T1"); err != nil {
+		t.Fatal(err)
+	}
+	r, _ := repo.Discover(dir)
+	wt := r.WorktreePath("T1", "login")
+
+	// Agent does work: writes source file WITHOUT .gab/SUMMARY.md, commits in the worktree.
+	os.WriteFile(filepath.Join(wt, "app.txt"), []byte("done\n"), 0o644)
+	gitx.Run(wt, "add", "-A")
+	gitx.Run(wt, "commit", "-m", "implement login without summary")
+
+	// complete is invoked from the worktree
+	if err := Complete(wt, "T1"); err != nil {
+		t.Fatal(err)
+	}
+
+	// Assert: status is to-verify and summary.md was NOT created in main
+	tdir, _, _ := TicketDirByID(r, "T1")
+	m, _ := ticket.ReadMeta(filepath.Join(tdir, "meta.yml"))
+	if m.Status != ticket.StatusToVerify {
+		t.Fatalf("status = %q, want to-verify", m.Status)
+	}
+	if _, err := os.Stat(filepath.Join(tdir, "summary.md")); err == nil {
+		t.Fatal("summary.md should NOT exist when no SUMMARY.md was written in worktree")
+	} else if !os.IsNotExist(err) {
+		t.Fatalf("unexpected error checking summary.md: %v", err)
+	}
+}
+
+func TestCompleteRejectsNonInProgress(t *testing.T) {
+	dir := testutil.InitRepo(t)
+	seedPlanned(t, dir, "T1", "login")
+	// Do NOT call Start, so status remains "planned"
+
+	// Try to complete a ticket that is not in-progress
+	if err := Complete(dir, "T1"); err == nil {
+		t.Fatal("expected error for non-in-progress ticket")
+	}
+}
