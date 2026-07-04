@@ -246,9 +246,18 @@ ist der universelle Kern, die Skills sind die austauschbare Prosa.
 
 ## 13. Offene Implementierungs-Entscheidungen (nicht blockierend)
 
-- **Sprache von `gab-helper`:** Bash+`yq` (null Runtime, aber YAML-Handling fummelig) vs.
-  **Python** (sauberes `meta.yml`-Handling, aber Runtime-Dependency). Tendenz: Python,
-  da die Zielgruppe Python praktisch immer verfügbar hat.
+- **Sprache von `gab-helper`: Go** (entschieden). Ein statisches Binary, null
+  Runtime-Dependency (kein Interpreter/`yq` nötig), schneller Cold-Start, triviale
+  Cross-Compilation für macOS/Linux/Windows. Das passt zum Kern-Prinzip "portabel, überall
+  lauffähig, von jedem Agenten aufrufbar" besser als ein Python-Script.
+  - **Git-Ops:** *nicht* nachbauen — das installierte `git`-Binary via `exec.Command`
+    aufrufen (`worktree add/remove`, Squash-Merge, `git mv`, Branch-Delete). Robust und
+    verhaltensgleich zum echten Git. `go-git` (pure Go) bewusst *nicht* — bei Worktrees
+    schwach.
+  - **YAML:** `gopkg.in/yaml.v3` mit getippten Structs für `meta.yml`.
+  - **Preis:** Build-/Release-Pipeline nötig (vorgebaute Binaries pro OS/Arch, z.B.
+    `goreleaser` + CI); der Plugin-Adapter liefert/holt das passende Binary statt eines
+    droppbaren Scripts. Für einen CLI-zentrierten Kern gerechtfertigt.
 - **Merge-Detail bei `/gab:done`:** Squash ist gesetzt; Branch-Naming/Cleanup-Konventionen
   im Plan festzurren.
 ```
