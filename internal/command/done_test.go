@@ -39,9 +39,20 @@ func TestDoneMergesArchivesAndCleansUp(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(r.DoneDir(), "010-T1-login")); err != nil {
 		t.Fatalf("ticket not archived to done/: %v", err)
 	}
-	// main's .gab was not polluted by the branch's BRIEF.md
+	// main's .gab was not polluted by the branch's BRIEF.md or SUMMARY.md
 	if _, err := os.Stat(filepath.Join(dir, ".gab", "BRIEF.md")); !os.IsNotExist(err) {
 		t.Fatalf("BRIEF.md leaked into main .gab")
+	}
+	if _, err := os.Stat(filepath.Join(dir, ".gab", "SUMMARY.md")); !os.IsNotExist(err) {
+		t.Fatalf("SUMMARY.md leaked into main .gab")
+	}
+	// archived ticket's status should still be to-verify (not reverted by .gab discard)
+	archivedMeta, err := ticket.ReadMeta(filepath.Join(r.DoneDir(), "010-T1-login", "meta.yml"))
+	if err != nil {
+		t.Fatalf("failed to read archived ticket meta: %v", err)
+	}
+	if archivedMeta.Status != ticket.StatusToVerify {
+		t.Fatalf("archived ticket status should be %q, got %q", ticket.StatusToVerify, archivedMeta.Status)
 	}
 	// worktree + branch removed
 	if _, err := os.Stat(wt); !os.IsNotExist(err) {

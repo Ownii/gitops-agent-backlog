@@ -2,7 +2,6 @@ package command
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 
 	"github.com/Ownii/gitops-agent-backlog/internal/gitx"
@@ -41,8 +40,10 @@ func Done(cwd, id string) error {
 	if _, err := gitx.Run(r.Main, "checkout", "--", ".gab"); err != nil {
 		return err
 	}
-	// Remove any brief file that was newly added by the branch (untracked after reset).
-	_ = os.Remove(filepath.Join(r.GabDir(), "BRIEF.md"))
+	// Remove any untracked .gab files that were newly added by the branch.
+	if _, err := gitx.Run(r.Main, "clean", "-fd", "--", ".gab"); err != nil {
+		return fmt.Errorf("clean .gab: %w", err)
+	}
 	if _, err := gitx.Run(r.Main, "commit", "-m", fmt.Sprintf("feat: %s (%s)", m.Title, id)); err != nil {
 		return err
 	}
