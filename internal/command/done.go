@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/Ownii/gitops-agent-backlog/internal/gitx"
@@ -46,6 +47,11 @@ func Done(cwd, id string) error {
 	}
 	if _, err := gitx.Run(r.Main, "commit", "-m", fmt.Sprintf("feat: %s (%s)", m.Title, id)); err != nil {
 		return err
+	}
+
+	// Recreate the done/ directory (git clean removes untracked empty dirs).
+	if err := os.MkdirAll(r.DoneDir(), 0o755); err != nil {
+		return fmt.Errorf("ensure done dir: %w", err)
 	}
 
 	// Archive the ticket folder to done/.
