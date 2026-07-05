@@ -14,7 +14,7 @@ import (
 func TestCompleteFlowsSummaryAndSetsToVerify(t *testing.T) {
 	dir := testutil.InitRepo(t)
 	seedPlanned(t, dir, "T1", "login")
-	if err := Start(dir, "T1"); err != nil {
+	if _, err := Start(dir, "T1"); err != nil {
 		t.Fatal(err)
 	}
 	r, _ := repo.Discover(dir)
@@ -57,7 +57,7 @@ func TestCompleteRejectsDirtyWorktree(t *testing.T) {
 func TestCompleteWithoutSummaryStillSetsToVerify(t *testing.T) {
 	dir := testutil.InitRepo(t)
 	seedPlanned(t, dir, "T1", "login")
-	if err := Start(dir, "T1"); err != nil {
+	if _, err := Start(dir, "T1"); err != nil {
 		t.Fatal(err)
 	}
 	r, _ := repo.Discover(dir)

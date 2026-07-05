@@ -41,10 +41,12 @@ func dispatch(args []string, stdout, stderr io.Writer) int {
 			fmt.Fprintln(stderr, "usage: gab-helper start <id>")
 			return 2
 		}
-		if err := command.Start(".", args[1]); err != nil {
+		wt, err := command.Start(".", args[1])
+		if err != nil {
 			fmt.Fprintln(stderr, "error:", err)
 			return 1
 		}
+		fmt.Fprintln(stdout, wt)
 		return 0
 	case "complete":
 		if len(args) != 2 {

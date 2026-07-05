@@ -39,8 +39,13 @@ func TestStartCreatesWorktreeBriefAndStatus(t *testing.T) {
 	dir := testutil.InitRepo(t)
 	tdir := seedPlanned(t, dir, "T1", "login")
 
-	if err := Start(dir, "T1"); err != nil {
+	got, err := Start(dir, "T1")
+	if err != nil {
 		t.Fatal(err)
+	}
+	r, _ := repo.Discover(dir)
+	if got != r.WorktreePath("T1", "login") {
+		t.Fatalf("Start returned %q, want worktree path %q", got, r.WorktreePath("T1", "login"))
 	}
 
 	// status flipped on main
@@ -49,7 +54,6 @@ func TestStartCreatesWorktreeBriefAndStatus(t *testing.T) {
 		t.Fatalf("meta after start = %+v", m)
 	}
 	// worktree exists with a committed BRIEF.md
-	r, _ := repo.Discover(dir)
 	wt := r.WorktreePath("T1", "login")
 	brief, err := os.ReadFile(filepath.Join(wt, ".gab", "BRIEF.md"))
 	if err != nil {
@@ -86,7 +90,7 @@ func TestStartRejectsNonPlanned(t *testing.T) {
 	r, _ := repo.Discover(dir)
 	tdir, _, _ := TicketDirByID(r, "T1")
 	ticket.WriteMeta(filepath.Join(tdir, "meta.yml"), &ticket.Meta{ID: "T1", Status: ticket.StatusTodo})
-	if err := Start(dir, "T1"); err == nil {
+	if _, err := Start(dir, "T1"); err == nil {
 		t.Fatal("expected error starting a non-planned ticket")
 	}
 }
@@ -96,7 +100,7 @@ func TestStartRejectsExistingWorktree(t *testing.T) {
 	tdir := seedPlanned(t, dir, "T1", "login")
 
 	// First call should succeed
-	if err := Start(dir, "T1"); err != nil {
+	if _, err := Start(dir, "T1"); err != nil {
 		t.Fatal(err)
 	}
 
@@ -110,7 +114,7 @@ func TestStartRejectsExistingWorktree(t *testing.T) {
 	}
 
 	// Second call should fail because worktree/branch already exists
-	if err := Start(dir, "T1"); err == nil {
+	if _, err := Start(dir, "T1"); err == nil {
 		t.Fatal("expected error starting when worktree/branch already exists")
 	}
 }
