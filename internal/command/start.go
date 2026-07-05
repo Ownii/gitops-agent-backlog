@@ -76,7 +76,9 @@ func Start(cwd, id string) (string, error) {
 	if _, err := gitx.Run(r.Main, "add", metaPath); err != nil {
 		return "", fmt.Errorf("status add failed: %w", err)
 	}
-	if _, err := gitx.Run(r.Main, "commit", "-m", fmt.Sprintf("gab: %s in-progress", id)); err != nil {
+	// Pathspec commit: commit ONLY meta.yml, never whatever the user may have
+	// staged on main in parallel.
+	if _, err := gitx.Run(r.Main, "commit", "-m", fmt.Sprintf("gab: %s in-progress", id), "--", metaPath); err != nil {
 		return "", fmt.Errorf("status commit failed: %w", err)
 	}
 	return wt, nil

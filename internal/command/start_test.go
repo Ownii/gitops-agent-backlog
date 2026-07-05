@@ -83,6 +83,34 @@ func TestStartCreatesWorktreeBriefAndStatus(t *testing.T) {
 	}
 }
 
+func TestStartDoesNotCommitForeignStagedChanges(t *testing.T) {
+	dir := testutil.InitRepo(t)
+	seedPlanned(t, dir, "T1", "login")
+
+	// The user has staged unrelated work on main (the product encourages this
+	// while agents run in worktrees). Start must not sweep it into the gab commit.
+	os.WriteFile(filepath.Join(dir, "unrelated.txt"), []byte("wip\n"), 0o644)
+	if _, err := gitx.Run(dir, "add", "unrelated.txt"); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := Start(dir, "T1"); err != nil {
+		t.Fatal(err)
+	}
+
+	files, err := gitx.Run(dir, "show", "--name-only", "--pretty=format:", "HEAD")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(files, "unrelated.txt") {
+		t.Fatalf("in-progress commit swept up foreign staged file:\n%s", files)
+	}
+	staged, _ := gitx.Run(dir, "diff", "--cached", "--name-only")
+	if !strings.Contains(staged, "unrelated.txt") {
+		t.Fatalf("foreign staged change was lost; staged=%q", staged)
+	}
+}
+
 func TestStartRejectsNonPlanned(t *testing.T) {
 	dir := testutil.InitRepo(t)
 	seedPlanned(t, dir, "T1", "login")
