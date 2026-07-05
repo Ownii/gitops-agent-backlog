@@ -5,7 +5,9 @@ disable-model-invocation: true
 allowed-tools: Bash(gab-helper *)
 ---
 
-You are finishing gab ticket "$1" after the user's QA approval.
+You are finishing gab ticket "$1" after the user's QA approval. Run this from the
+main checkout, not from inside the ticket's worktree — `done` removes that worktree
+at the end, and running from within it would delete your own working directory.
 
 1. Confirm the user has reviewed and approved the work — this is the human QA gate.
    If they have not, stop and ask them to review the branch `gab/<id>-<slug>` first.

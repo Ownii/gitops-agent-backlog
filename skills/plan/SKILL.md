@@ -1,7 +1,7 @@
 ---
 description: Write an implementation plan for a gab ticket, on main, for review before work starts. Use when the user wants to plan a gab ticket.
 argument-hint: "[ticket id]"
-allowed-tools: Bash(gab-helper *)
+allowed-tools: Bash(gab-helper *), Bash(git add:*), Bash(git commit:*)
 ---
 
 You are writing the implementation plan for gab ticket "$1". This happens on `main`

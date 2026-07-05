@@ -8,8 +8,8 @@ import (
 
 	"github.com/Ownii/gitops-agent-backlog/internal/gitx"
 	"github.com/Ownii/gitops-agent-backlog/internal/repo"
-	"github.com/Ownii/gitops-agent-backlog/internal/ticket"
 	"github.com/Ownii/gitops-agent-backlog/internal/testutil"
+	"github.com/Ownii/gitops-agent-backlog/internal/ticket"
 )
 
 // seedPlanned creates a committed planned ticket with spec.md + plan.md.

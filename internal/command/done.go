@@ -31,6 +31,13 @@ func Done(cwd, id string) error {
 		return fmt.Errorf("ticket %s has no branch recorded", id)
 	}
 
+	// Guard: done removes the ticket's worktree at the end. If it runs from
+	// inside that worktree, it would delete the process's own cwd. Fail fast.
+	wt := r.WorktreePath(folder.ID, folder.Slug)
+	if isInside(cwd, wt) {
+		return fmt.Errorf("run done from the main checkout (%s), not from inside the ticket's worktree (%s)", r.Main, wt)
+	}
+
 	// Precondition: main's worktree must be clean, so that a rollback
 	// (git reset --hard) can safely restore it without discarding unrelated
 	// work. Untracked files (e.g. an uncommitted freshly-`new`ed ticket) do
@@ -103,7 +110,6 @@ func Done(cwd, id string) error {
 	// --- Best-effort cleanup: past the point of no return. The merge is
 	// committed; a cleanup failure must NOT roll back real work, so warn. ---
 
-	wt := r.WorktreePath(folder.ID, folder.Slug)
 	if _, err := gitx.Run(r.Main, "worktree", "remove", "--force", wt); err != nil {
 		fmt.Fprintf(os.Stderr, "gab: warning: could not remove worktree %s: %v\n", wt, err)
 	}

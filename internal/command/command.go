@@ -4,10 +4,28 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/Ownii/gitops-agent-backlog/internal/repo"
 	"github.com/Ownii/gitops-agent-backlog/internal/ticket"
 )
+
+// isInside reports whether path is dir itself or nested within it. Symlinks are
+// resolved where possible (macOS temp dirs are symlinked) so the comparison is
+// robust; a non-existent dir falls back to a lexical comparison.
+func isInside(path, dir string) bool {
+	if p, err := filepath.EvalSymlinks(path); err == nil {
+		path = p
+	}
+	if d, err := filepath.EvalSymlinks(dir); err == nil {
+		dir = d
+	}
+	rel, err := filepath.Rel(dir, path)
+	if err != nil {
+		return false
+	}
+	return rel == "." || (rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator)))
+}
 
 const defaultDoD = `# Definition of Done
 

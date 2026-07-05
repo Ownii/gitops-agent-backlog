@@ -7,8 +7,8 @@ import (
 
 	"github.com/Ownii/gitops-agent-backlog/internal/gitx"
 	"github.com/Ownii/gitops-agent-backlog/internal/repo"
-	"github.com/Ownii/gitops-agent-backlog/internal/ticket"
 	"github.com/Ownii/gitops-agent-backlog/internal/testutil"
+	"github.com/Ownii/gitops-agent-backlog/internal/ticket"
 )
 
 func TestDoneMergesArchivesAndCleansUp(t *testing.T) {
@@ -162,6 +162,37 @@ func TestDoneRollsBackOnMergeConflict(t *testing.T) {
 	m, _ := ticket.ReadMeta(filepath.Join(tdir, "meta.yml"))
 	if m.Status != ticket.StatusToVerify {
 		t.Fatalf("ticket status changed after rollback: %q", m.Status)
+	}
+}
+
+// TestDoneRejectsRunFromInsideWorktree ensures done refuses to run from inside
+// the very worktree it would remove (removing the process's own cwd).
+func TestDoneRejectsRunFromInsideWorktree(t *testing.T) {
+	dir := testutil.InitRepo(t)
+	seedPlanned(t, dir, "T1", "login")
+	Start(dir, "T1")
+	r, _ := repo.Discover(dir)
+	wt := r.WorktreePath("T1", "login")
+	os.WriteFile(filepath.Join(wt, "app.txt"), []byte("feature\n"), 0o644)
+	gitx.Run(wt, "add", "-A")
+	gitx.Run(wt, "commit", "-m", "impl")
+	Complete(wt, "T1")
+
+	// Invoke done from INSIDE the worktree — must be refused before any work.
+	if err := Done(wt, "T1"); err == nil {
+		t.Fatal("expected error running done from inside the worktree")
+	}
+	// The worktree must still exist and the ticket stay active + to-verify.
+	if _, err := os.Stat(wt); err != nil {
+		t.Fatalf("worktree should be untouched after refusal: %v", err)
+	}
+	tdir, _, err := TicketDirByID(r, "T1")
+	if err != nil {
+		t.Fatalf("ticket should still be active: %v", err)
+	}
+	m, _ := ticket.ReadMeta(filepath.Join(tdir, "meta.yml"))
+	if m.Status != ticket.StatusToVerify {
+		t.Fatalf("status = %q, want to-verify (unchanged)", m.Status)
 	}
 }
 

@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Ownii/gitops-agent-backlog/internal/ticket"
 	"github.com/Ownii/gitops-agent-backlog/internal/testutil"
+	"github.com/Ownii/gitops-agent-backlog/internal/ticket"
 )
 
 func TestNextReturnsReadyID(t *testing.T) {

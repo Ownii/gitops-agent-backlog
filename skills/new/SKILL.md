@@ -1,7 +1,7 @@
 ---
 description: Create and rigorously refine a new gab ticket (spec + acceptance criteria) in the local .gab backlog. Use when the user wants to add a new task to work on with gab.
 argument-hint: "[short title]"
-allowed-tools: Bash(gab-helper *)
+allowed-tools: Bash(gab-helper *), Bash(git add:*), Bash(git commit:*)
 ---
 
 You are creating a new gab ticket. A ticket is a shared, **interpretation-free**

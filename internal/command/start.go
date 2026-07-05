@@ -45,7 +45,7 @@ func Start(cwd, id string) (string, error) {
 	if err := os.MkdirAll(filepath.Dir(wt), 0o755); err != nil {
 		return "", fmt.Errorf("failed to create worktree parent directory: %w", err)
 	}
-	if _, err := gitx.Run(r.Main, "worktree", "add", "-b", branch, wt, "main"); err != nil {
+	if _, err := gitx.Run(r.Main, "worktree", "add", "-b", branch, wt, r.Trunk); err != nil {
 		return "", fmt.Errorf("worktree add failed: %w", err)
 	}
 
