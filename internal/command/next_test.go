@@ -2,6 +2,7 @@ package command
 
 import (
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/Ownii/gitops-agent-backlog/internal/ticket"
@@ -35,5 +36,33 @@ func TestNextBlockedByDependency(t *testing.T) {
 	}
 	if id != "" || len(blocked) == 0 {
 		t.Fatalf("expected blocked, got id=%q blocked=%v", id, blocked)
+	}
+}
+
+func TestNextExplainsWhenNothingPlanned(t *testing.T) {
+	dir := testutil.InitRepo(t)
+	if _, err := New(dir, "login"); err != nil { // scaffolds a todo ticket
+		t.Fatal(err)
+	}
+	id, blocked, err := Next(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if id != "" {
+		t.Fatalf("expected no ready ticket, got id=%q", id)
+	}
+	if len(blocked) == 0 || !strings.Contains(blocked[0], "todo") {
+		t.Fatalf("expected a 'todo' explanation, got %v", blocked)
+	}
+}
+
+func TestNextExplainsEmptyBacklog(t *testing.T) {
+	dir := testutil.InitRepo(t)
+	id, blocked, err := Next(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if id != "" || len(blocked) == 0 || !strings.Contains(blocked[0], "empty") {
+		t.Fatalf("expected empty-backlog explanation, got id=%q blocked=%v", id, blocked)
 	}
 }

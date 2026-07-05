@@ -56,6 +56,10 @@ correct it. Proceed only once they agree it is complete and correct.
      obvious dependency in prose (e.g. "depends on T4"). Do not set `depends_on`.
    - `## Acceptance Criteria` — a checklist of specific, verifiable outcomes that
      covers the happy path AND every edge case and failure mode you agreed on.
+4. Set a human-readable `title:` in the ticket's `meta.yml` — the confirmed title as
+   a real sentence (e.g. "OAuth login via Google"), distinct from the kebab-case slug
+   in the folder name. (`gab-helper new` seeds `title` with the slug as a fallback;
+   replace it with the readable one — later steps and the merge commit use it.)
 
 ## 5. Ambiguity self-review (before committing)
 Re-read the spec as a stranger with no context and questionable judgement:
@@ -68,7 +72,10 @@ Fix issues inline until a first-time reader could implement it without asking yo
 a single clarifying question.
 
 ## 6. Commit and hand off
-Commit on main: `git add .gab/tickets/<folder>` then
+Commit on main. Stage the ticket folder AND the global Definition of Done (the
+latter is only newly created on the very first ticket, but it must be versioned as
+part of main's truth — do not leave it untracked):
+`git add .gab/tickets/<folder> .gab/definition-of-done.md` then
 `git commit -m "gab: new ticket <id> <slug>"`. Tell the user the ticket id and that
 `/gab:plan <id>` is the next step.
 
