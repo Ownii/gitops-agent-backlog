@@ -31,6 +31,7 @@ func mainWorktree(cwd string) (string, error) {
 	}
 	var curPath string
 	for _, line := range strings.Split(out, "\n") {
+		line = strings.TrimRight(line, "\r") // tolerate CRLF line endings
 		switch {
 		case strings.HasPrefix(line, "worktree "):
 			curPath = strings.TrimPrefix(line, "worktree ")

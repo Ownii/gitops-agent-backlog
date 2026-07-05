@@ -1,6 +1,7 @@
 package gitx
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/Ownii/gitops-agent-backlog/internal/testutil"
@@ -19,8 +20,13 @@ func TestRunReturnsStdout(t *testing.T) {
 
 func TestRunErrorIncludesStderr(t *testing.T) {
 	dir := testutil.InitRepo(t)
-	if _, err := Run(dir, "cat-file", "-p", "deadbeef"); err == nil {
+	_, err := Run(dir, "cat-file", "-p", "deadbeef")
+	if err == nil {
 		t.Fatal("expected error for bad object")
+	}
+	// The error must surface git's stderr, not just report a non-zero exit.
+	if !strings.Contains(err.Error(), "deadbeef") {
+		t.Fatalf("error should include git stderr mentioning the bad object, got: %v", err)
 	}
 }
 
