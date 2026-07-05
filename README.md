@@ -6,9 +6,11 @@ Your backlog lives in your repo as plain files, is the single source of truth (n
 GitHub Issues required), and each ticket is worked autonomously in an isolated git worktree —
 planned, implemented, and verified by an agent, with you at the approval gates.
 
-> **Status: early design phase.** The concept and architecture are specified
-> ([design doc](docs/superpowers/specs/2026-07-04-gab-core-design.md)); implementation has
-> not started yet. Ideas, feedback, and issues are very welcome.
+> **Status: MVP implemented, pre-release.** The core is built and tested — the
+> `gab-helper` binary, all six commands, and the Claude Code adapter (see the
+> [design doc](docs/superpowers/specs/2026-07-04-gab-core-design.md)). No packaged
+> release yet: you build the helper yourself (see [Try it](#try-it)). Ideas, feedback,
+> and issues are very welcome.
 
 ---
 
@@ -111,10 +113,14 @@ The core is agent-neutral by design:
 
 ## Roadmap
 
-**MVP (in design):**
+**MVP (implemented):**
 - The six commands, the `.gab/` layout, and the `gab-helper` Go binary
 - Dependency gating, manual reordering, single-player / local-first
 - Claude Code adapter
+
+**Next up (pre-release):**
+- CI (test/vet/lint) and a release pipeline that ships prebuilt `gab-helper` binaries
+- A read-only `gab-helper list` for backlog overview
 
 **Later:**
 - A local, offline web UI to visualise the backlog
@@ -139,4 +145,4 @@ loop with `/gab:new → /gab:plan → /gab:next → /gab:complete → /gab:done`
 
 ## License
 
-MIT (planned).
+[MIT](LICENSE).
