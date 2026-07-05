@@ -87,10 +87,10 @@ func Complete(cwd, id string) error {
 	// Best-effort push of the feature branch.
 	if gitx.HasRemote(cwd, "origin") {
 		if _, err := gitx.Run(cwd, "push", "-u", "origin", m.Branch); err != nil {
-			fmt.Printf("gab: warning: push of %s failed: %v\n  (status is saved on main; push the branch manually)\n", m.Branch, err)
+			fmt.Fprintf(os.Stderr, "gab: warning: push of %s failed: %v\n  (status is saved on main; push the branch manually)\n", m.Branch, err)
 		}
 	} else {
-		fmt.Printf("gab: no origin remote; skipped push of %s\n", m.Branch)
+		fmt.Fprintf(os.Stderr, "gab: no origin remote; skipped push of %s\n", m.Branch)
 	}
 	return nil
 }

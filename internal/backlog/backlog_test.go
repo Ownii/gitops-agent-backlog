@@ -3,6 +3,7 @@ package backlog
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/Ownii/gitops-agent-backlog/internal/repo"
@@ -176,28 +177,28 @@ func TestLoadMissingTicketsDir(t *testing.T) {
 	}
 }
 
-func TestFind(t *testing.T) {
+func TestNextFlagsUnknownDependency(t *testing.T) {
+	// T2 depends on T4 (a real in-progress ticket) and T99 (neither active nor
+	// done — a typo or a deleted ticket). Both leave T2 blocked, but the message
+	// must call out the unknown id so it does not read as a normal wait.
 	active := []Ticket{
-		mk(10, "T1", ticket.StatusTodo),
-		mk(20, "T2", ticket.StatusPlanned),
-		mk(30, "T3", ticket.StatusInProgress),
+		mk(10, "T4", ticket.StatusInProgress),
+		mk(20, "T2", ticket.StatusPlanned, "T4", "T99"),
 	}
-
-	// Test finding existing ticket
-	found, ok := Find(active, "T2")
-	if !ok {
-		t.Fatal("expected to find T2")
+	chosen, blocked, err := Next(active, map[string]bool{})
+	if err != nil {
+		t.Fatal(err)
 	}
-	if found == nil || found.Meta.ID != "T2" {
-		t.Fatalf("expected T2, got %+v", found)
+	if chosen != nil {
+		t.Fatalf("expected nothing ready, got %+v", chosen)
 	}
-
-	// Test finding non-existent ticket
-	found, ok = Find(active, "T99")
-	if ok {
-		t.Fatal("expected not to find T99")
+	if len(blocked) != 1 {
+		t.Fatalf("expected 1 blocked entry, got %v", blocked)
 	}
-	if found != nil {
-		t.Fatalf("expected nil for T99, got %+v", found)
+	if !strings.Contains(blocked[0], "T99") || !strings.Contains(blocked[0], "unknown") {
+		t.Fatalf("expected T99 flagged as unknown, got %q", blocked[0])
+	}
+	if strings.Contains(blocked[0], "T4 (unknown") {
+		t.Fatalf("T4 is a known in-progress ticket and must NOT be flagged unknown, got %q", blocked[0])
 	}
 }

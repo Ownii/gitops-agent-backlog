@@ -49,37 +49,47 @@ func Start(cwd, id string) (string, error) {
 		return "", fmt.Errorf("worktree add failed: %w", err)
 	}
 
+	// Past this point the worktree and branch exist. Any failure must roll them
+	// back (and discard an uncommitted status write) so the ticket returns to a
+	// clean `planned` state and a retry is not blocked by leftover artifacts.
+	rollback := func(cause error) (string, error) {
+		gitx.Run(r.Main, "worktree", "remove", "--force", wt)
+		gitx.Run(r.Main, "branch", "-D", branch)
+		gitx.Run(r.Main, "checkout", "--", metaPath)
+		return "", cause
+	}
+
 	// Materialize the statusless brief and commit it on the branch.
 	brief, err := buildBrief(tdir, r.DoDPath())
 	if err != nil {
-		return "", fmt.Errorf("failed to build brief: %w", err)
+		return rollback(fmt.Errorf("failed to build brief: %w", err))
 	}
 	if err := os.MkdirAll(filepath.Join(wt, ".gab"), 0o755); err != nil {
-		return "", fmt.Errorf("failed to create .gab directory: %w", err)
+		return rollback(fmt.Errorf("failed to create .gab directory: %w", err))
 	}
 	if err := os.WriteFile(filepath.Join(wt, ".gab", "BRIEF.md"), brief, 0o644); err != nil {
-		return "", fmt.Errorf("failed to write BRIEF.md: %w", err)
+		return rollback(fmt.Errorf("failed to write BRIEF.md: %w", err))
 	}
 	if _, err := gitx.Run(wt, "add", ".gab/BRIEF.md"); err != nil {
-		return "", fmt.Errorf("brief add failed: %w", err)
+		return rollback(fmt.Errorf("brief add failed: %w", err))
 	}
 	if _, err := gitx.Run(wt, "commit", "-m", "gab: brief for "+id); err != nil {
-		return "", fmt.Errorf("brief commit failed: %w", err)
+		return rollback(fmt.Errorf("brief commit failed: %w", err))
 	}
 
 	// Set truth on main.
 	m.Status = ticket.StatusInProgress
 	m.Branch = branch
 	if err := ticket.WriteMeta(metaPath, m); err != nil {
-		return "", fmt.Errorf("failed to write meta: %w", err)
+		return rollback(fmt.Errorf("failed to write meta: %w", err))
 	}
 	if _, err := gitx.Run(r.Main, "add", metaPath); err != nil {
-		return "", fmt.Errorf("status add failed: %w", err)
+		return rollback(fmt.Errorf("status add failed: %w", err))
 	}
 	// Pathspec commit: commit ONLY meta.yml, never whatever the user may have
 	// staged on main in parallel.
 	if _, err := gitx.Run(r.Main, "commit", "-m", fmt.Sprintf("gab: %s in-progress", id), "--", metaPath); err != nil {
-		return "", fmt.Errorf("status commit failed: %w", err)
+		return rollback(fmt.Errorf("status commit failed: %w", err))
 	}
 	return wt, nil
 }

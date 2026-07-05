@@ -111,6 +111,40 @@ func TestStartDoesNotCommitForeignStagedChanges(t *testing.T) {
 	}
 }
 
+func TestStartRollsBackOnFailureAfterWorktreeAdd(t *testing.T) {
+	dir := testutil.InitRepo(t)
+	tdir := seedPlanned(t, dir, "T1", "login")
+	r, _ := repo.Discover(dir)
+
+	// Sabotage brief-building: replace spec.md (a file) with a directory so
+	// os.ReadFile fails AFTER the worktree has already been created.
+	specPath := filepath.Join(tdir, "spec.md")
+	if err := os.Remove(specPath); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(specPath, 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := Start(dir, "T1"); err == nil {
+		t.Fatal("expected Start to fail when brief-building fails")
+	}
+
+	// The worktree and branch must be cleaned up so a retry is not blocked...
+	wt := r.WorktreePath("T1", "login")
+	if _, err := os.Stat(wt); !os.IsNotExist(err) {
+		t.Fatalf("worktree not cleaned up after failure (stat err = %v)", err)
+	}
+	if _, err := gitx.Run(r.Main, "rev-parse", "--verify", "gab/T1-login"); err == nil {
+		t.Fatal("branch not cleaned up after failure")
+	}
+	// ...and the status must stay planned (no half-applied in-progress).
+	m, _ := ticket.ReadMeta(filepath.Join(tdir, "meta.yml"))
+	if m.Status != ticket.StatusPlanned {
+		t.Fatalf("status = %q, want planned (unchanged) after rollback", m.Status)
+	}
+}
+
 func TestStartRejectsNonPlanned(t *testing.T) {
 	dir := testutil.InitRepo(t)
 	seedPlanned(t, dir, "T1", "login")

@@ -105,10 +105,10 @@ func Done(cwd, id string) error {
 
 	wt := r.WorktreePath(folder.ID, folder.Slug)
 	if _, err := gitx.Run(r.Main, "worktree", "remove", "--force", wt); err != nil {
-		fmt.Printf("gab: warning: could not remove worktree %s: %v\n", wt, err)
+		fmt.Fprintf(os.Stderr, "gab: warning: could not remove worktree %s: %v\n", wt, err)
 	}
 	if _, err := gitx.Run(r.Main, "branch", "-D", m.Branch); err != nil {
-		fmt.Printf("gab: warning: could not delete branch %s: %v\n", m.Branch, err)
+		fmt.Fprintf(os.Stderr, "gab: warning: could not delete branch %s: %v\n", m.Branch, err)
 	}
 	return nil
 }

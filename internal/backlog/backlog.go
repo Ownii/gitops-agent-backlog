@@ -94,20 +94,15 @@ func NextID(active []Ticket, doneIDs map[string]bool) string {
 	return "T" + strconv.Itoa(max+1)
 }
 
-func Find(active []Ticket, id string) (*Ticket, bool) {
-	for i := range active {
-		if active[i].Meta != nil && active[i].Meta.ID == id || active[i].Folder.ID == id {
-			return &active[i], true
-		}
-	}
-	return nil, false
-}
-
 // Next returns the first ready planned ticket by rank, an explanation of any
 // blocked planned tickets, and a non-nil error only on a dependency cycle.
 func Next(active []Ticket, doneIDs map[string]bool) (*Ticket, []string, error) {
 	if err := detectCycle(active); err != nil {
 		return nil, nil, err
+	}
+	activeIDs := map[string]bool{}
+	for i := range active {
+		activeIDs[active[i].Meta.ID] = true
 	}
 	var blocked []string
 	for i := range active {
@@ -119,7 +114,18 @@ func Next(active []Ticket, doneIDs map[string]bool) (*Ticket, []string, error) {
 		if len(missing) == 0 {
 			return t, blocked, nil
 		}
-		blocked = append(blocked, fmt.Sprintf("%s blocked on %s", t.Meta.ID, strings.Join(missing, ", ")))
+		// Flag dependency ids that exist neither among active tickets nor in
+		// done/ — a typo or a deleted ticket would otherwise block the ticket
+		// forever while looking like a normal in-progress wait.
+		annotated := make([]string, len(missing))
+		for j, d := range missing {
+			if !activeIDs[d] && !doneIDs[d] {
+				annotated[j] = d + " (unknown id — typo or deleted ticket?)"
+			} else {
+				annotated[j] = d
+			}
+		}
+		blocked = append(blocked, fmt.Sprintf("%s blocked on %s", t.Meta.ID, strings.Join(annotated, ", ")))
 	}
 	return nil, blocked, nil
 }
