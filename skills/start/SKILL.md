@@ -1,13 +1,17 @@
 ---
-description: Start a planned gab ticket in an isolated worktree and drive it to completion via a delegated implementation + review loop. Use only when the user explicitly starts a ticket.
+description: Start a planned gab ticket in an isolated worktree and drive it to completion via a delegated implementation + review loop. Invoke ONLY on an explicit user request to start a ticket — either the user runs /gab:start directly, or /gab:next hands off after the user asked what to work on next. Never start a ticket on your own initiative.
 argument-hint: "[ticket id]"
-disable-model-invocation: true
 allowed-tools: Bash(gab-helper *), Task
 ---
 
 You are starting gab ticket "$1". The work happens in an isolated worktree, driven by
 subagents — so it neither ties up the user's main session nor touches their branch.
 **You orchestrate; you do not implement inline.**
+
+Starting a ticket creates a worktree, a branch, and a commit — real, side-effectful
+work. Only proceed when the user has explicitly asked to start this ticket (directly,
+or by asking for the next ticket so `/gab:next` handed off to you). If you arrived here
+on your own initiative, stop and ask the user first.
 
 1. Create the worktree and brief: run `gab-helper start $1`. It creates a git worktree
    + branch `gab/<id>-<slug>`, commits a statusless `.gab/BRIEF.md` (spec + plan +
