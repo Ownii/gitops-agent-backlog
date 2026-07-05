@@ -25,6 +25,9 @@ on your own initiative, stop and ask the user first.
    the subagent to use the **least powerful model that can do the job** (save the
    expensive models for judgement, not transcription). Instruct it to:
    - Read `.gab/BRIEF.md` first: spec, plan, acceptance criteria, Definition of Done.
+   - Set up the project's dependencies in the fresh worktree before testing (e.g.
+     `npm install`, `go mod download`, `uv sync` — whatever this project uses). A
+     new worktree starts without installed dependencies.
    - Implement the plan test-first — write a failing test, see it fail, write the
      minimal code to pass, see it pass, and commit in small steps. When a test fails
      unexpectedly, debug systematically: find the root cause, do not guess.

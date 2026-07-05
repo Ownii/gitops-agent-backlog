@@ -1,3 +1,9 @@
+> **Historical concept — superseded by the [core design spec](superpowers/specs/2026-07-04-gab-core-design.md).**
+> This canvas captured the original idea. Some details no longer match what was
+> built — notably the storage layout (a ticket is a *folder* of files, not flat
+> files) and the command set (six slash commands, not one). Read it for intent,
+> not as the current specification.
+
 # PRODUCT CONCEPT CANVAS: `gab` (GitOps Agent Backlog) – Claude Code Plugin
 
 | 1. CORE PROBLEM & PAIN POINTS | 2. TARGET AUDIENCE & USERS |

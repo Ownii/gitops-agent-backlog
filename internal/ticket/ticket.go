@@ -55,7 +55,9 @@ type Folder struct {
 	Name string
 }
 
-var folderRe = regexp.MustCompile(`^(\d{3})-(T\d+)-([a-z0-9]+(?:-[a-z0-9]+)*)$`)
+// At least 3 digits (zero-padded), but more once a long-lived backlog's rank
+// crosses 1000 — sorting is by the parsed int, so extra digits do not break it.
+var folderRe = regexp.MustCompile(`^(\d{3,})-(T\d+)-([a-z0-9]+(?:-[a-z0-9]+)*)$`)
 
 var slugRe = regexp.MustCompile(`^[a-z0-9]+(?:-[a-z0-9]+)*$`)
 

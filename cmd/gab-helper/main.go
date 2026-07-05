@@ -16,6 +16,7 @@ commands:
   complete <id>     flow summary back to main, set status to-verify, push
   done <id>         squash-merge, archive to done/, remove worktree
   next              print the id of the next ready ticket
+  list              print the active backlog, one line per ticket
 `
 
 func dispatch(args []string, stdout, stderr io.Writer) int {
@@ -82,6 +83,14 @@ func dispatch(args []string, stdout, stderr io.Writer) int {
 			return 3
 		}
 		fmt.Fprintln(stdout, id)
+		return 0
+	case "list":
+		out, err := command.List(".")
+		if err != nil {
+			fmt.Fprintln(stderr, "error:", err)
+			return 1
+		}
+		fmt.Fprint(stdout, out)
 		return 0
 	default:
 		fmt.Fprintf(stderr, "unknown command %q\n\n%s", args[0], usage)

@@ -20,7 +20,18 @@ git/filesystem state changes so an agent never has to do them by hand.
 6. `gab-helper done <id>` — squash-merge, archive to `.gab/done/`, clean up.
 
 `gab-helper next` prints the id of the next ready ticket (a `planned` ticket
-whose dependencies are all done), or exits 3 if none is ready.
+whose dependencies are all done), or exits 3 if none is ready. `gab-helper list`
+prints the active backlog, one line per ticket.
 
 In Claude Code these steps are the slash commands `/gab:new`, `/gab:plan`,
-`/gab:next`, `/gab:start`, `/gab:complete`, `/gab:done`.
+`/gab:next`, `/gab:start`, `/gab:complete`, `/gab:done`, `/gab:list`.
+
+## Conventions to respect
+- **`meta.yml` is machine-owned.** `gab-helper` rewrites it (status, branch) and
+  does not preserve comments or key ordering. Keep human notes in `spec.md` /
+  `plan.md` / `summary.md`, not in `meta.yml`.
+- **Archive with `done`, never delete a ticket folder by hand.** Ids are assigned
+  from the highest id seen across active and archived tickets; removing a folder
+  outright can recycle its id, and existing `depends_on` references would then
+  point at the wrong ticket. `gab-helper done` moves the folder to `.gab/done/`,
+  which keeps the id reserved.

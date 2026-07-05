@@ -98,6 +98,7 @@ you want a cloud copy — but the truth stays local.
 | `/gab:start <id>` | → worktree | Create worktree + brief, begin the implementation loop |
 | `/gab:complete <id>` | worktree → main | Verify done-criteria, push, flow summary back (`to-verify`) |
 | `/gab:done <id>` | main | After your QA: squash-merge, archive to `done/`, clean up |
+| `/gab:list` | main | Read-only overview of the active backlog, one line per ticket |
 
 ## Portability
 
@@ -114,13 +115,13 @@ The core is agent-neutral by design:
 ## Roadmap
 
 **MVP (implemented):**
-- The six commands, the `.gab/` layout, and the `gab-helper` Go binary
+- The six commands plus a read-only `/gab:list`, the `.gab/` layout, and the
+  `gab-helper` Go binary
 - Dependency gating, manual reordering, single-player / local-first
 - Claude Code adapter
 
 **Next up (pre-release):**
-- CI (test/vet/lint) and a release pipeline that ships prebuilt `gab-helper` binaries
-- A read-only `gab-helper list` for backlog overview
+- CI (test/vet/gofmt) and a release pipeline that ships prebuilt `gab-helper` binaries
 
 **Later:**
 - A local, offline web UI to visualise the backlog

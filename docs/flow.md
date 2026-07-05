@@ -1,3 +1,8 @@
+> **Historical sketch — superseded by the [core design spec](superpowers/specs/2026-07-04-gab-core-design.md).**
+> The `TaskCreated`/`TaskCompleted` hook mechanic below was never built: slash
+> commands invoke `gab-helper` directly (see design §6). The flow is otherwise
+> right in spirit — truth on main, work in an isolated worktree, human QA gate.
+
 [ MAIN WORKTREE ]
 1. Brainstorming (/gab:new)  -> Erstellt Ticket/Spec in .gab/tickets/
 2. Planning                  -> Agent schreibt "Implementation Plan" ins Ticket

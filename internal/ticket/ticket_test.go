@@ -19,6 +19,19 @@ func TestFormatAndParseFolder(t *testing.T) {
 	}
 }
 
+func TestParseFolderAcceptsRankOverflow(t *testing.T) {
+	// Ranks grow by +10 per ticket; a long-lived backlog crosses 1000. A
+	// 4-digit rank must still parse (sorting is by the parsed int), or the
+	// ticket silently vanishes from Load.
+	f, err := ParseFolder("1000-T5-login")
+	if err != nil {
+		t.Fatalf("4-digit rank rejected: %v", err)
+	}
+	if f.Rank != 1000 || f.ID != "T5" || f.Slug != "login" {
+		t.Fatalf("ParseFolder = %+v", f)
+	}
+}
+
 func TestParseFolderRejectsBadNames(t *testing.T) {
 	for _, bad := range []string{"nope", "10-T9-x", "020-9-x", "020-T9-"} {
 		if _, err := ParseFolder(bad); err == nil {

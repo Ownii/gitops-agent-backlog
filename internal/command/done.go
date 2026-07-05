@@ -60,6 +60,12 @@ func Done(cwd, id string) error {
 		if _, rbErr := gitx.Run(r.Main, "reset", "-q", "--hard", startSHA); rbErr != nil {
 			return fmt.Errorf("%w (rollback ALSO failed: %v — main may be left partially merged)", cause, rbErr)
 		}
+		// reset --hard restores tracked files but leaves untracked ones. If the
+		// squash-merge already dumped the branch's .gab residue and a later step
+		// unstaged it, drop it so a failed done leaves no stray files on main.
+		for _, f := range []string{"BRIEF.md", "SUMMARY.md"} {
+			os.Remove(filepath.Join(r.GabDir(), f))
+		}
 		return fmt.Errorf("done aborted, main rolled back to %s: %w", startSHA[:7], cause)
 	}
 
