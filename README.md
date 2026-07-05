@@ -124,6 +124,13 @@ The core is agent-neutral by design:
 **Non-goals:** team/multi-user coordination, a cloud/SaaS platform, replacing your issue tracker
 for cross-team work. `gab` is intentionally a personal, local tool.
 
+## Try it
+
+`gab` ships as a Claude Code plugin (this repo). Build the helper with
+`go build -o bin/gab-helper ./cmd/gab-helper`, enable the plugin, and drive the
+loop with `/gab:new → /gab:plan → /gab:next → /gab:complete → /gab:done`. See
+[docs/gab-usage.md](docs/gab-usage.md) for setup and the full walkthrough.
+
 ## Documentation
 
 - [Core design spec](docs/superpowers/specs/2026-07-04-gab-core-design.md)
